@@ -3,6 +3,8 @@ package be.vdab.repositories;
 import be.vdab.domain.Gezin;
 
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class PersoonRepository extends AbstractRepository {
     public void create(Gezin gezin) throws SQLException {
@@ -32,6 +34,26 @@ public class PersoonRepository extends AbstractRepository {
             }
             statement.executeBatch();
             connection.commit();
+        }
+    }
+
+    public List<String> findGrootsteVermogen() throws SQLException {
+        var personen = new ArrayList<String>();
+        var sql = """
+                SELECT voornaam FROM familie.personen
+                WHERE vermogen = (SELECT max(vermogen) from familie.personen)
+                ORDER BY voornaam
+                """;
+        try (var connection = super.getConnection();
+            var statement = connection.prepareStatement(sql)) {
+            connection.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
+            connection.setAutoCommit(false);
+            var result = statement.executeQuery();
+            while (result.next()) {
+                personen.add(result.getString("voornaam"));
+            }
+            connection.commit();
+            return personen;
         }
     }
 }
