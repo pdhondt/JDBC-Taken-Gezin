@@ -1,6 +1,7 @@
 package be.vdab.repositories;
 
 import be.vdab.domain.Gezin;
+import be.vdab.dto.PersoonMetPapaEnMama;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -54,6 +55,28 @@ public class PersoonRepository extends AbstractRepository {
             }
             connection.commit();
             return personen;
+        }
+    }
+    public List<PersoonMetPapaEnMama> findPersonenMetPapaEnMama() throws SQLException {
+        var personenMetPapaEnMama = new ArrayList<PersoonMetPapaEnMama>();
+        var sql = """
+                select kinderen.voornaam as kindVoornaam, papas.voornaam as papaVoornaam, mamas.voornaam as mamaVoornaam
+                from personen as kinderen
+                inner join personen as papas on kinderen.papaid = papas.id
+                inner join personen as mamas on kinderen.mamaid = mamas.id
+                order by kinderen.voornaam
+                """;
+        try (var connection = super.getConnection();
+            var statement = connection.prepareStatement(sql)) {
+            connection.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
+            connection.setAutoCommit(false);
+            var result = statement.executeQuery();
+            while (result.next()) {
+                personenMetPapaEnMama.add(new PersoonMetPapaEnMama(result.getString("kindVoornaam"),
+                        result.getString("papaVoornaam"), result.getString("mamaVoornaam")));
+            }
+            connection.commit();
+            return personenMetPapaEnMama;
         }
     }
 }

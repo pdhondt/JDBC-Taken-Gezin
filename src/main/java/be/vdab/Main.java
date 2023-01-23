@@ -30,10 +30,17 @@ public class Main {
         } catch (SQLException ex) {
             ex.printStackTrace(System.err);
         }*/
-        var repository = new PersoonRepository();
+        /*var repository = new PersoonRepository();
         try {
             System.out.println("Lijst van personen met het grootste vermogen:");
             repository.findGrootsteVermogen().forEach(System.out::println);
+        } catch (SQLException ex) {
+            ex.printStackTrace(System.err);
+        }*/
+        var repository = new PersoonRepository();
+        try {
+            System.out.println("Lijst van personen met papa en mama:");
+            repository.findPersonenMetPapaEnMama().forEach(System.out::println);
         } catch (SQLException ex) {
             ex.printStackTrace(System.err);
         }
