@@ -1,8 +1,9 @@
 package be.vdab;
 
 import be.vdab.domain.Gezin;
-import be.vdab.exceptions.PersoonNietGevondenException;
+import be.vdab.dto.PersoonMetOptionelePapaEnMama;
 import be.vdab.repositories.PersoonRepository;
+import org.w3c.dom.ls.LSOutput;
 
 import java.sql.SQLException;
 import java.util.Scanner;
@@ -45,7 +46,7 @@ public class Main {
         } catch (SQLException ex) {
             ex.printStackTrace(System.err);
         }*/
-        var scanner = new Scanner(System.in);
+        /*var scanner = new Scanner(System.in);
         System.out.print("Persoon id:");
         var id = scanner.nextLong();
         var repository = new PersoonRepository();
@@ -63,6 +64,22 @@ public class Main {
             }
         } catch (SQLException ex) {
             ex.printStackTrace(System.err);
+        }*/
+        var scanner = new Scanner(System.in);
+        System.out.print("Persoon id: ");
+        var id = scanner.nextLong();
+        var repository = new PersoonRepository();
+        try {
+            repository.findPersoonMetOptioneleOudersById(id)
+                    .ifPresentOrElse(persoon -> toon(persoon),
+                            () -> System.out.println("Niet gevonden"));
+        } catch (SQLException ex) {
+            ex.printStackTrace(System.err);
         }
+    }
+    private static void toon(PersoonMetOptionelePapaEnMama persoon) {
+        System.out.println(persoon.voornaam());
+        persoon.voornaamPapa().ifPresent(System.out::println);
+        persoon.voornaamMama().ifPresent(System.out::println);
     }
 }

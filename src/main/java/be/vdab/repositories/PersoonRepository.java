@@ -1,11 +1,13 @@
 package be.vdab.repositories;
 
 import be.vdab.domain.Gezin;
+import be.vdab.dto.PersoonMetOptionelePapaEnMama;
 import be.vdab.dto.PersoonMetPapaEnMama;
 
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class PersoonRepository extends AbstractRepository {
     public void create(Gezin gezin) throws SQLException {
@@ -116,6 +118,28 @@ public class PersoonRepository extends AbstractRepository {
                 return new PersoonMetPapaEnMama(result.getString("kindVoornaam"),
                         result.getString("papaVoornaam"), result.getString("mamaVoornaam"));
             }
+        }
+    }
+    public Optional<PersoonMetOptionelePapaEnMama> findPersoonMetOptioneleOudersById(Long id) throws SQLException {
+        var sql = """
+                select kinderen.voornaam as kindVoornaam, papas.voornaam as papaVoornaam, mamas.voornaam as mamaVoornaam
+                from personen as kinderen
+                inner join personen as papas on kinderen.papaid = papas.id
+                inner join personen as mamas on kinderen.mamaid = mamas.id
+                where kinderen.id = ?
+                """;
+        try (var connection = super.getConnection();
+             var statement = connection.prepareStatement(sql)) {
+            connection.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
+            connection.setAutoCommit(false);
+            statement.setLong(1, id);
+            var result = statement.executeQuery();
+            connection.commit();
+            return result.next() ?
+                    Optional.of(new PersoonMetOptionelePapaEnMama(result.getString("kindVoornaam"),
+                    Optional.ofNullable(result.getString("papaVoornaam")),
+                            Optional.ofNullable(result.getString("mamaVoornaam")))) :
+                    Optional.empty();
         }
     }
 }
