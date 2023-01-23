@@ -124,8 +124,8 @@ public class PersoonRepository extends AbstractRepository {
         var sql = """
                 select kinderen.voornaam as kindVoornaam, papas.voornaam as papaVoornaam, mamas.voornaam as mamaVoornaam
                 from personen as kinderen
-                inner join personen as papas on kinderen.papaid = papas.id
-                inner join personen as mamas on kinderen.mamaid = mamas.id
+                left outer join personen as papas on kinderen.papaid = papas.id
+                left outer join personen as mamas on kinderen.mamaid = mamas.id
                 where kinderen.id = ?
                 """;
         try (var connection = super.getConnection();
