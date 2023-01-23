@@ -91,9 +91,8 @@ public class PersoonRepository extends AbstractRepository {
             connection.setAutoCommit(false);
             statement.setLong(1, id);
             var result = statement.executeQuery();
-            result.next();
-            connection.commit();
-            return result.getString("voornaam");
+            return result.next() ? result.getString("voornaam") : null;
+            //connection.commit();
         }
     }
     public PersoonMetPapaEnMama findPersoonMetOudersById(Long id) throws SQLException {
@@ -110,10 +109,12 @@ public class PersoonRepository extends AbstractRepository {
             connection.setAutoCommit(false);
             statement.setLong(1, id);
             var result = statement.executeQuery();
-            result.next();
-            connection.commit();
-            return new PersoonMetPapaEnMama(result.getString("kindVoornaam"),
-                    result.getString("papaVoornaam"), result.getString("mamaVoornaam"));
+            if (!result.next()) {
+                return null;
+            } else {
+                return new PersoonMetPapaEnMama(result.getString("kindVoornaam"),
+                        result.getString("papaVoornaam"), result.getString("mamaVoornaam"));
+            }
         }
     }
 }

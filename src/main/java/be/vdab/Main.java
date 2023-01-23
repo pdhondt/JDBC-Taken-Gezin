@@ -55,8 +55,8 @@ public class Main {
                 System.out.println("Niet gevonden.");
             } else {
                 var persoon = repository.findPersoonMetOudersById(id);
-                if (persoon.voornaamPapa() == null && persoon.voornaamMama() == null) {
-                    System.out.println(persoon.voornaam());
+                if (persoon == null) {
+                    System.out.println(voornaam);
                 } else {
                     System.out.println(persoon);
                 }
