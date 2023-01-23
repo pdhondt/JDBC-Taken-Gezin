@@ -79,4 +79,41 @@ public class PersoonRepository extends AbstractRepository {
             return personenMetPapaEnMama;
         }
     }
+    public String findById(Long id) throws SQLException {
+        var sql = """
+                select voornaam
+                from personen
+                where id = ?
+                """;
+        try (var connection = super.getConnection();
+             var statement = connection.prepareStatement(sql)) {
+            connection.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
+            connection.setAutoCommit(false);
+            statement.setLong(1, id);
+            var result = statement.executeQuery();
+            result.next();
+            connection.commit();
+            return result.getString("voornaam");
+        }
+    }
+    public PersoonMetPapaEnMama findPersoonMetOudersById(Long id) throws SQLException {
+        var sql = """
+                select kinderen.voornaam as kindVoornaam, papas.voornaam as papaVoornaam, mamas.voornaam as mamaVoornaam
+                from personen as kinderen
+                inner join personen as papas on kinderen.papaid = papas.id
+                inner join personen as mamas on kinderen.mamaid = mamas.id
+                where kinderen.id = ?
+                """;
+        try (var connection = super.getConnection();
+             var statement = connection.prepareStatement(sql)) {
+            connection.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
+            connection.setAutoCommit(false);
+            statement.setLong(1, id);
+            var result = statement.executeQuery();
+            result.next();
+            connection.commit();
+            return new PersoonMetPapaEnMama(result.getString("kindVoornaam"),
+                    result.getString("papaVoornaam"), result.getString("mamaVoornaam"));
+        }
+    }
 }

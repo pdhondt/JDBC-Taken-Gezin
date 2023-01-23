@@ -1,6 +1,7 @@
 package be.vdab;
 
 import be.vdab.domain.Gezin;
+import be.vdab.exceptions.PersoonNietGevondenException;
 import be.vdab.repositories.PersoonRepository;
 
 import java.sql.SQLException;
@@ -37,10 +38,29 @@ public class Main {
         } catch (SQLException ex) {
             ex.printStackTrace(System.err);
         }*/
-        var repository = new PersoonRepository();
+        /*var repository = new PersoonRepository();
         try {
             System.out.println("Lijst van personen met papa en mama:");
             repository.findPersonenMetPapaEnMama().forEach(System.out::println);
+        } catch (SQLException ex) {
+            ex.printStackTrace(System.err);
+        }*/
+        var scanner = new Scanner(System.in);
+        System.out.print("Persoon id:");
+        var id = scanner.nextLong();
+        var repository = new PersoonRepository();
+        try {
+            var voornaam = repository.findById(id);
+            if (voornaam == null) {
+                System.out.println("Niet gevonden.");
+            } else {
+                var persoon = repository.findPersoonMetOudersById(id);
+                if (persoon.voornaamPapa() == null && persoon.voornaamMama() == null) {
+                    System.out.println(persoon.voornaam());
+                } else {
+                    System.out.println(persoon);
+                }
+            }
         } catch (SQLException ex) {
             ex.printStackTrace(System.err);
         }
