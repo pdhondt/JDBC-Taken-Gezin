@@ -2,6 +2,9 @@ package be.vdab;
 
 import be.vdab.domain.Gezin;
 import be.vdab.dto.PersoonMetOptionelePapaEnMama;
+import be.vdab.exceptions.GeenKinderenException;
+import be.vdab.exceptions.GeenVermogenException;
+import be.vdab.exceptions.PersoonNietGevondenException;
 import be.vdab.repositories.PersoonRepository;
 import org.w3c.dom.ls.LSOutput;
 
@@ -65,7 +68,7 @@ public class Main {
         } catch (SQLException ex) {
             ex.printStackTrace(System.err);
         }*/
-        var scanner = new Scanner(System.in);
+        /*var scanner = new Scanner(System.in);
         System.out.print("Persoon id: ");
         var id = scanner.nextLong();
         var repository = new PersoonRepository();
@@ -74,6 +77,21 @@ public class Main {
                     .ifPresentOrElse(persoon -> toon(persoon),
                             () -> System.out.println("Niet gevonden"));
         } catch (SQLException ex) {
+            ex.printStackTrace(System.err);
+        }*/
+        var scanner = new Scanner(System.in);
+        System.out.print("Id: ");
+        var id = scanner.nextLong();
+        var repository = new PersoonRepository();
+        try {
+            repository.verdeelErfenis(id);
+        } catch (PersoonNietGevondenException ex) {
+            System.out.println("Niet Gevonden");
+        } catch (GeenVermogenException ex) {
+            System.out.println("Geen vermogen");
+        } catch (GeenKinderenException ex) {
+            System.out.println("Geen kinderen");
+        } catch (SQLException ex)   {
             ex.printStackTrace(System.err);
         }
     }

@@ -3,7 +3,12 @@ package be.vdab.repositories;
 import be.vdab.domain.Gezin;
 import be.vdab.dto.PersoonMetOptionelePapaEnMama;
 import be.vdab.dto.PersoonMetPapaEnMama;
+import be.vdab.exceptions.GeenKinderenException;
+import be.vdab.exceptions.GeenVermogenException;
+import be.vdab.exceptions.PersoonNietGevondenException;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -140,6 +145,65 @@ public class PersoonRepository extends AbstractRepository {
                     Optional.ofNullable(result.getString("papaVoornaam")),
                             Optional.ofNullable(result.getString("mamaVoornaam")))) :
                     Optional.empty();
+        }
+    }
+    public void verdeelErfenis(long id) throws SQLException {
+        var sql = """
+                select ouders.vermogen, count(kinderen.id) as aantalKinderen
+                from personen as ouders
+                left outer join personen as kinderen
+                on ouders.id = kinderen.papaid or ouders.id = kinderen.mamaid
+                where ouders.id = ?
+                group by ouders.id
+                for update
+                """;
+        try (var connection = super.getConnection();
+            var statement = connection.prepareStatement(sql)) {
+            connection.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
+            connection.setAutoCommit(false);
+            statement.setLong(1, id);
+            var result = statement.executeQuery();
+            if (!result.next()) {
+                throw new PersoonNietGevondenException();
+            }
+            var vermogen = result.getBigDecimal("vermogen");
+            if (vermogen.compareTo(BigDecimal.ZERO) == 0) {
+                connection.rollback();
+                throw new GeenVermogenException();
+            }
+            var aantalKinderen = result.getInt("aantalKinderen");
+            if (aantalKinderen == 0) {
+                connection.rollback();
+                throw new GeenKinderenException();
+            }
+            var erfenisPerKind = vermogen.divide(BigDecimal.valueOf(aantalKinderen), 2, RoundingMode.HALF_UP);
+            verhoogVermogenMetErfenis(id, connection, erfenisPerKind);
+            zetVermogenOpNul(id, connection);
+            connection.commit();
+        }
+    }
+    private void verhoogVermogenMetErfenis(long id, Connection connection, BigDecimal erfenis) throws SQLException {
+        var sql = """
+                update personen
+                set vermogen = vermogen + ?
+                where papaid = ? or mamaid = ?
+                """;
+        try (var statement = connection.prepareStatement(sql)) {
+            statement.setBigDecimal(1, erfenis);
+            statement.setLong(2, id);
+            statement.setLong(3, id);
+            statement.executeUpdate();
+        }
+    }
+    private void zetVermogenOpNul(long id, Connection connection) throws SQLException {
+        var sql = """
+                update personen
+                set vermogen = 0
+                where id = ?
+                """;
+        try (var statement = connection.prepareStatement(sql)) {
+            statement.setLong(1, id);
+            statement.executeUpdate();
         }
     }
 }
